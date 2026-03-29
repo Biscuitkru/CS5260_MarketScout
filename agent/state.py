@@ -7,9 +7,8 @@ Ideally the worker node reads from and writes to this structure.
 Pipeline order:  orchestrator -> scout -> analyst -> publisher
 """
 import operator
-from typing import Annotated, Optional
+from typing import Annotated
 from typing_extensions import TypedDict
-
 
 class MarketScoutState(TypedDict):
     # 1. INPUT (set once by main.py before graph.invoke())
@@ -28,8 +27,7 @@ class MarketScoutState(TypedDict):
 
     # 3. SCOUT OUTPUTS (written by scout.py)
     raw_results: Annotated[list[dict], operator.add]
-    # Accumulated search results from Tavily. Uses operator.add so that results from multiple queries are concatenated correctly.
-    # Each dict should ideally conform to: (CHANGE THIS BASED ON TAVILY'S ACTUAL RESPONSE SCHEMA)
+    # Accumulated search results from Tavily, change the schema as needed based on actual API response.
     # {
     #     "name":         str,
     #     "url":          str,
