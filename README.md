@@ -10,7 +10,7 @@ MarketScout is an autonomous market research agent that plans research strategie
  
 ## I. Problem Statement
  
-High-quality market research is currently gated behind expensive consultancy firms (McKinsey, BCG, etc.) or requires hundreds of hours of manual effort. Small business owners — cafe operators, boutique retailers, freelancers — often make decisions on gut feeling simply because they cannot afford actionable data.
+High-quality market research is currently gated behind expensive consultancy firms (McKinsey, BCG, etc.) or requires hundreds of hours of manual effort. Small business owners such as cafe operators, boutique retailers, freelancers, often make decisions on gut feeling simply because they cannot afford actionable data.
  
 No viable middle ground exists between two extremes:
  
@@ -61,7 +61,7 @@ The brain of the operation. Parses user intent and coordinates three specialized
  
 To ensure MarketScout is a reliable alternative to expensive manual research, the system will be evaluated across three core metrics:
  
-**Agent Reliability:** The percentage of runs where the Orchestrator successfully completes the full research loop (scout → analyze → publish) without timing out, dropping context, or entering an infinite loop.
+**Agent Reliability:** The percentage of runs where the Orchestrator successfully completes the full research loop (scout -> analyze -> publish) without timing out, dropping context, or entering an infinite loop.
  
 **Cost to Value:** Total token usage and API costs per generated report. The target is a comprehensive market-gap analysis produced under a strict cost threshold, proving viability for budget-constrained entrepreneurs.
  
