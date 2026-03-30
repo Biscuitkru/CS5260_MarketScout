@@ -4,7 +4,7 @@ MarketScout: State
 Source of truth for all data flowing through the LangGraph pipeline.
 Ideally the worker node reads from and writes to this structure.
 
-Pipeline order:  orchestrator -> scout -> analyst -> publisher
+Pipeline order: planner -> scout -> analyst -> publisher
 """
 import operator
 from typing import Annotated
@@ -15,7 +15,9 @@ class MarketScoutState(TypedDict):
     user_query: str
     # Example: "I want to open an artisan coffee shop in Austin, Texas"
 
-    # 2. ORCHESTRATOR OUTPUTS (written by orchestrator.py)
+    # 2. ORCHESTRATOR
+    clarification_attempts: int
+    # Incremented each time clarify_node runs. Caps the clarification loop
     business_idea: str
     # Normalized business concept, e.g. "artisan coffee shop"
     target_location: str
@@ -23,7 +25,7 @@ class MarketScoutState(TypedDict):
     search_queries: list[str]
     # 4–6 targeted queries for the Scout to run, e.g.:
     #   ["coffee shops Austin TX", "best cafes Austin TX reviews", ...]
-    # Replacement semantics: orchestrator sets this once and Scout reads it.
+    # Replacement semantics: planner sets this once and Scout reads it.
 
     # 3. SCOUT OUTPUTS (written by scout.py)
     raw_results: Annotated[list[dict], operator.add]
