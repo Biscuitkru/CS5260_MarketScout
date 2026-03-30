@@ -1,0 +1,14 @@
+{
+  "dependencies": [
+    "langgraph",
+    "langchain-google-genai",
+    "langchain-core",
+    "python-dotenv",
+    "tavily-python",
+    "pydantic"
+  ],
+  "graphs": {
+    "market_scout": "./agent/graph.py:graph"
+  },
+  "env": ".env"
+}
