@@ -1,6 +1,6 @@
 """
 MarketScout: Followup Handler
-====================
+====================================
 Handles follow-up questions after a report is generated.
 Builds full context before the invoke call for an answer.
 """

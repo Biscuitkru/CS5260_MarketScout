@@ -1,6 +1,6 @@
 """
 MarketScout: State
-======================================
+====================================
 Source of truth for all data flowing through the LangGraph pipeline.
 Ideally the worker node reads from and writes to this structure.
 

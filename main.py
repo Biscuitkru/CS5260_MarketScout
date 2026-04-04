@@ -1,7 +1,7 @@
 """
 MarketScout: main
-==========================
-CLI entry point — runs the full pipeline with interrupt handling.
+====================================
+The script runs the full pipeline
 """
 from uuid import uuid4
 

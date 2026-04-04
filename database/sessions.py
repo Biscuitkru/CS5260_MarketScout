@@ -1,6 +1,6 @@
 """
 MarketScout: Session Persistence
-=================================
+====================================
 SQLite storage for chat sessions
 """
 import json
