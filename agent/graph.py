@@ -1,6 +1,6 @@
 """
 MarketScout: LangGraph Pipeline
-==================================
+====================================
 Wires the worker nodes into a StateGraph:
 
     START -> planner -> scout -> analyst -> publisher -> END

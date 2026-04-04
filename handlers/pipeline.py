@@ -1,6 +1,6 @@
 """
 MarketScout: Pipeline Handler
-====================
+====================================
 Runs the LangGraph pipeline and streams progress to the UI.
 Handles both initial queries and clarification resumes.
 """

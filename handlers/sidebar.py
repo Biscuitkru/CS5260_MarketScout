@@ -1,6 +1,6 @@
 """
-handlers/sidebar.py
-===================
+MarketScout: Sidebar
+====================================
 Renders the sidebar: new-chat button, past sessions list, and session actions.
 """
 from datetime import datetime, timezone
