@@ -9,6 +9,7 @@ from functools import lru_cache
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langgraph.types import interrupt
 from pydantic import BaseModel, Field
 
 from agent.config import PLANNER_MODEL
@@ -91,10 +92,10 @@ def clarify_node(state: MarketScoutState, config: RunnableConfig) -> dict:
     )
 
     question = llm.invoke(prompt).content.strip()
-    clarification = input(f"\n{question}\n> ").strip()
+    answer = interrupt(question)
 
     return {
-        "user_query": f"{state['user_query']} {clarification}",
+        "user_query": f"{state['user_query']} {answer}",
         "clarification_attempts": state["clarification_attempts"] + 1,
     }
 

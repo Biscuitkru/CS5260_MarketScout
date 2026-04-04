@@ -1,12 +1,15 @@
 """
 MarketScout: main
 ==========================
-The script runs the full pipeline
+CLI entry point — runs the full pipeline with interrupt handling.
 """
-from __future__ import annotations
+from uuid import uuid4
 
 from dotenv import load_dotenv
 load_dotenv()
+
+from langchain_core.runnables import RunnableConfig
+from langgraph.types import Command
 
 from agent.graph import graph
 from agent.state import MarketScoutState
@@ -23,14 +26,25 @@ def generate_report(user_query: str) -> str:
         "clarification_attempts": 0,
     }
 
+    thread_id = str(uuid4())
+    config: RunnableConfig = {"configurable": {"thread_id": thread_id}}
+
     print("=" * 60)
     print("MarketScout: Autonomous Market Research Agent")
     print("=" * 60)
     print(f"Query: {user_query}\n")
 
-    final_state = graph.invoke(initial_state)
+    result = graph.invoke(initial_state, config)
 
-    return final_state["report"]
+    # For clarification interrupts
+    state = graph.get_state(config)
+    while state.next:
+        question = state.tasks[0].interrupts[0].value
+        answer = input(f"\n{question}\n> ").strip()
+        result = graph.invoke(Command(resume=answer), config)
+        state = graph.get_state(config)
+
+    return result["report"]
 
 def collect_query() -> str:
     return input("What market are you looking to research?\n> ").strip()
