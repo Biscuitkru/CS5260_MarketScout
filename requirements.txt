@@ -4,3 +4,4 @@ langchain-core==1.2.23
 python-dotenv==1.2.2
 tavily-python==0.7.23
 pydantic==2.12.5
+streamlit==1.49.0
