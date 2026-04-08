@@ -7,10 +7,13 @@ from uuid import uuid4
 
 import streamlit as st
 from dotenv import load_dotenv
+
+load_dotenv()
+
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
-load_dotenv()
+from agent.utils.slides import build_pptx, summarize_to_slides
 
 from agent.state import MarketScoutState
 from database.sessions import rename_session, save_session
@@ -32,6 +35,9 @@ _defaults = {
     "pipeline_context": None,
     "pending_input": None,
     "renaming_session": None,
+    "pipeline_error": None,   # error message when pipeline fails
+    "error_config": None,     # config to resume from after error
+    "slide_data": None,       # pre-computed slide dicts for pptx + terminal
 }
 for key, val in _defaults.items():
     if key not in st.session_state:
@@ -97,10 +103,27 @@ if st.session_state.renaming_session:
 
 render_sidebar()
 
-# Chat history 
+# Chat history
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
+
+# Download button — shown persistently once a report exists
+if st.session_state.report and st.session_state.slide_data:
+    pptx_bytes = build_pptx(st.session_state.slide_data)
+    st.download_button(
+        label="Download Slide Deck (.pptx)",
+        data=pptx_bytes,
+        file_name="MarketScout_SlideDeck.pptx",
+        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    )
+
+# Retry button — shown when pipeline hit an error
+if st.session_state.pipeline_error:
+    st.error(st.session_state.pipeline_error)
+    if st.button("Retry"):
+        st.session_state.pipeline_error = None
+        run_pipeline(None, st.session_state.error_config, _save_current_session)
 
 # Input routing
 if st.session_state.pending_input is not None:

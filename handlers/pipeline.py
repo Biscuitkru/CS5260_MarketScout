@@ -9,6 +9,21 @@ import streamlit as st
 from langchain_core.runnables import RunnableConfig
 
 from agent.graph import graph
+from agent.utils.slides import summarize_to_slides
+
+
+def _print_slides(slides: list[dict]):
+    print("\n" + "=" * 60)
+    print("  SLIDE DECK PREVIEW")
+    print("=" * 60)
+    for i, slide in enumerate(slides, 1):
+        print(f"\n[Slide {i}] {slide['title']}")
+        if slide.get("subtitle"):
+            print(f"          {slide['subtitle']}")
+        print("-" * 40)
+        for bullet in slide.get("bullets", []):
+            print(f"  • {bullet}")
+    print("\n" + "=" * 60 + "\n")
 
 def run_pipeline(input_data, config: RunnableConfig, save_fn):
     with st.chat_message("assistant"):
@@ -16,35 +31,44 @@ def run_pipeline(input_data, config: RunnableConfig, save_fn):
         report = None
         ctx = st.session_state.pipeline_context or {}
 
-        for update in graph.stream(input_data, config, stream_mode="updates"):
-            node = list(update.keys())[0]
-            data = update[node]
+        try:
+            for update in graph.stream(input_data, config, stream_mode="updates"):
+                node = list(update.keys())[0]
+                data = update[node]
 
-            if node == "planner":
-                ctx["business_idea"] = data.get("business_idea", "")
-                ctx["target_location"] = data.get("target_location", "")
-                ctx["search_queries"] = data.get("search_queries", [])
-                status.write(f"**Business:** {ctx['business_idea']}")
-                status.write(f"**Location:** {ctx['target_location']}")
-                if ctx["search_queries"]:
-                    status.write("**Search queries:**")
-                    for q in ctx["search_queries"]:
-                        status.write(f"- {q}")
-            elif node == "scout":
-                ctx["raw_results"] = data.get("raw_results", [])
-                n = len(ctx["raw_results"])
-                status.write(f"Searched the web — {n} result groups collected")
-            elif node == "analyst":
-                ctx["analysis"] = data.get("analysis", {})
-                nc = len(ctx["analysis"].get("competitors", []))
-                np_ = len(ctx["analysis"].get("pain_points", []))
-                ng = len(ctx["analysis"].get("market_gaps", []))
-                status.write(
-                    f"Market analysis complete — {nc} competitors, "
-                    f"{np_} pain points, {ng} market gaps"
-                )
-            elif node == "publisher":
-                report = data.get("report", "")
+                if node == "planner":
+                    ctx["business_idea"] = data.get("business_idea", "")
+                    ctx["target_location"] = data.get("target_location", "")
+                    ctx["search_queries"] = data.get("search_queries", [])
+                    status.write(f"**Business:** {ctx['business_idea']}")
+                    status.write(f"**Location:** {ctx['target_location']}")
+                    if ctx["search_queries"]:
+                        status.write("**Search queries:**")
+                        for q in ctx["search_queries"]:
+                            status.write(f"- {q}")
+                elif node == "scout":
+                    ctx["raw_results"] = data.get("raw_results", [])
+                    n = len(ctx["raw_results"])
+                    status.write(f"Searched the web — {n} result groups collected")
+                elif node == "analyst":
+                    ctx["analysis"] = data.get("analysis", {})
+                    nc = len(ctx["analysis"].get("competitors", []))
+                    np_ = len(ctx["analysis"].get("pain_points", []))
+                    ng = len(ctx["analysis"].get("market_gaps", []))
+                    status.write(
+                        f"Market analysis complete — {nc} competitors, "
+                        f"{np_} pain points, {ng} market gaps"
+                    )
+                elif node == "publisher":
+                    report = data.get("report", "")
+
+        except Exception as e:
+            status.update(label="Pipeline failed", state="error")
+            st.session_state.pipeline_error = str(e)
+            st.session_state.error_config = config
+            st.session_state.pipeline_context = ctx
+            st.rerun()
+            return
 
         state = graph.get_state(config)
         if state.next:
@@ -57,6 +81,9 @@ def run_pipeline(input_data, config: RunnableConfig, save_fn):
             st.rerun()
         elif report is not None:
             status.update(label="Research complete!", state="complete")
+            slide_data = summarize_to_slides(report)
+            _print_slides(slide_data)
+            st.session_state.slide_data = slide_data
             st.markdown(report)
             st.session_state.messages.append({"role": "assistant", "content": report})
             st.session_state.report = report
