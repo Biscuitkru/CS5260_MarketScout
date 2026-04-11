@@ -1,6 +1,6 @@
 """
 MarketScout: LangGraph Pipeline
-==================================
+====================================
 Wires the worker nodes into a StateGraph:
 
     START -> planner -> scout -> analyst -> publisher -> END
@@ -11,6 +11,7 @@ Wires the worker nodes into a StateGraph:
 This file should not need changes unless you add new nodes or branching logic.
 """
 
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 
 from agent.state import MarketScoutState
@@ -40,6 +41,6 @@ def build_graph():
     builder.add_edge("analyst", "publisher")
     builder.add_edge("publisher", END)
 
-    return builder.compile()
+    return builder.compile(checkpointer=MemorySaver())
 
 graph = build_graph()
