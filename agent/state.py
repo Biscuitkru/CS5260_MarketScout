@@ -62,3 +62,9 @@ class MarketScoutState(TypedDict):
     # 5. PUBLISHER OUTPUTS (written by publisher.py)
     report: str
     # Final market research report. Markdown string by default. Change output format as you see fit.
+
+    report_tables: list[dict]
+    # Structured tabular data for the UI to render when the report includes useful statistics.
+
+    report_charts: list[dict]
+    # Structured chart specifications for the UI to render when the report includes useful statistics.

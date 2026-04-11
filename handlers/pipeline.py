@@ -4,6 +4,8 @@ MarketScout: Pipeline Handler
 Runs the LangGraph pipeline and streams progress to the UI.
 Handles both initial queries and clarification resumes.
 """
+from __future__ import annotations
+
 import streamlit as st
 
 from langchain_core.runnables import RunnableConfig
@@ -61,6 +63,14 @@ def run_pipeline(input_data, config: RunnableConfig, save_fn):
                     )
                 elif node == "publisher":
                     report = data.get("report", "")
+                    ctx["report_tables"] = data.get("report_tables", [])
+                    ctx["report_charts"] = data.get("report_charts", [])
+                    nt = len(ctx["report_tables"])
+                    nc = len(ctx["report_charts"])
+                    if nt or nc:
+                        status.write(
+                            f"Prepared {nt} table(s) and {nc} chart(s) for the report"
+                        )
 
         except Exception as e:
             status.update(label="Pipeline failed", state="error")
