@@ -5,6 +5,7 @@ Streamlit UI for MarketScout.
 """
 from uuid import uuid4
 
+import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -42,6 +43,47 @@ _defaults = {
 for key, val in _defaults.items():
     if key not in st.session_state:
         st.session_state[key] = val
+
+
+def _render_report_artifacts():
+    ctx = st.session_state.pipeline_context or {}
+    report_tables = ctx.get("report_tables", [])
+    report_charts = ctx.get("report_charts", [])
+
+    if not report_tables and not report_charts:
+        return
+
+    st.divider()
+    st.subheader("Report Data")
+
+    for table in report_tables:
+        rows = table.get("rows", [])
+        if not rows:
+            continue
+        st.markdown(f"**{table.get('title', 'Table')}**")
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+    for chart in report_charts:
+        records = chart.get("data", [])
+        x_field = chart.get("x")
+        y_field = chart.get("y")
+        if not records or not x_field or not y_field:
+            continue
+
+        df = pd.DataFrame(records)
+        if x_field not in df.columns or y_field not in df.columns:
+            continue
+
+        st.markdown(f"**{chart.get('title', 'Chart')}**")
+        chart_frame = df.set_index(x_field)
+        chart_type = chart.get("type", "bar")
+
+        if chart_type == "line":
+            st.line_chart(chart_frame[y_field])
+        elif chart_type == "area":
+            st.area_chart(chart_frame[y_field])
+        else:
+            st.bar_chart(chart_frame[y_field])
 
 # strip border + arrow from sidebar popover buttons
 st.markdown("""
@@ -108,6 +150,8 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
+_render_report_artifacts()
+
 # Download button — shown persistently once a report exists
 if st.session_state.report and st.session_state.slide_data:
     pptx_bytes = build_pptx(st.session_state.slide_data)
@@ -167,6 +211,8 @@ if st.session_state.pending_input is not None:
             "raw_results": [],
             "analysis": {},
             "report": "",
+            "report_tables": [],
+            "report_charts": [],
             "clarification_attempts": 0,
         }
         run_pipeline(initial_state, config, _save_current_session)

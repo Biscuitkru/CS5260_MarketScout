@@ -23,6 +23,8 @@ def generate_report(user_query: str) -> str:
         "raw_results": [],
         "analysis": {},
         "report": "",
+        "report_tables": [],
+        "report_charts": [],
         "clarification_attempts": 0,
     }
 
