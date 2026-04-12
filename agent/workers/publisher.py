@@ -14,6 +14,8 @@ from pydantic import BaseModel, Field
 from agent.config import PUBLISHER_MODEL
 from agent.state import MarketScoutState
 
+from langgraph.config import get_stream_writer
+
 
 class ReportTable(BaseModel):
     title: str = Field(description="Short title for the table.")
@@ -59,6 +61,12 @@ def _get_llm(model: str) -> ChatGoogleGenerativeAI:
 
 
 def publisher_node(state: MarketScoutState, config: RunnableConfig) -> dict:
+    
+    
+    writer = get_stream_writer()
+    writer({"agent": "publisher", "event": "start", "msg": "Drafting the final market research report"})
+
+    
     system_prompt = """\
 You are the Publisher for MarketScout.
 
@@ -105,7 +113,14 @@ Table and chart rules:
     ]
     model = config.get("configurable", {}).get("publisher_model", PUBLISHER_MODEL)
     llm = _get_llm(model).with_structured_output(PublisherOutput)
+    
+    writer({"agent": "publisher", "event": "thinking", "msg": "Calling LLM to synthesise report, tables, and charts"})
+
     output: PublisherOutput = llm.invoke(messages)
+
+    writer({"agent": "publisher", "event": "done", "msg": (
+        f"Report ready — {len(output.tables)} table(s), {len(output.charts)} chart(s)"
+    )})
 
     return {
         "report": output.report_markdown.strip(),
