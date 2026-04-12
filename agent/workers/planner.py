@@ -15,6 +15,8 @@ from pydantic import BaseModel, Field
 from agent.config import PLANNER_MODEL
 from agent.state import MarketScoutState
 
+from langgraph.config import get_stream_writer
+
 # Output schema
 class ResearchPlan(BaseModel):
     business_idea: str = Field(
@@ -92,6 +94,7 @@ def clarify_node(state: MarketScoutState, config: RunnableConfig) -> dict:
     )
 
     question = llm.invoke(prompt).content.strip()
+    get_stream_writer()({"agent": "clarify", "event": "done", "msg": "Pausing for user input"})
     answer = interrupt(question)
 
     return {
@@ -101,6 +104,10 @@ def clarify_node(state: MarketScoutState, config: RunnableConfig) -> dict:
 
 
 def planner_node(state: MarketScoutState, config: RunnableConfig) -> dict:
+    
+    writer = get_stream_writer()
+    writer({"agent": "planner", "event": "start", "msg": "Parsing query and drafting research plan"})
+    
     model = config.get("configurable", {}).get("planner_model", PLANNER_MODEL)
     llm = _get_llm(model, 0.0).with_structured_output(ResearchPlan)
 
@@ -116,6 +123,8 @@ def planner_node(state: MarketScoutState, config: RunnableConfig) -> dict:
     print(f"[Planner] Search queries:")
     for q in plan.search_queries:
         print(f"          • {q}")
+        
+    writer({"agent": "planner", "event": "done", "msg": f"Plan ready — {len(plan.search_queries)} queries drafted"})
 
     return {
         "business_idea": plan.business_idea,

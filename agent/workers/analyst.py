@@ -18,6 +18,8 @@ from pydantic import BaseModel, Field
 from agent.config import ANALYST_MODEL
 from agent.state import MarketScoutState
 
+from langgraph.config import get_stream_writer
+
 logger = logging.getLogger(__name__)
 
 
@@ -103,8 +105,11 @@ def analyst_node(state: MarketScoutState, config: RunnableConfig) -> dict:
     """
     LangGraph node: analyse raw scout results and return structured insights.
     """
+    writer = get_stream_writer()
     raw_results = state.get("raw_results", [])
     logger.info("Analyst: starting analysis of %d raw results", len(raw_results))
+    writer({"agent": "analyst", "event": "start", "msg": f"Analysing {len(raw_results)} result groups"})
+
 
     model = config.get("configurable", {}).get("analyst_model", ANALYST_MODEL)
     llm = _get_llm(model)
@@ -115,6 +120,9 @@ def analyst_node(state: MarketScoutState, config: RunnableConfig) -> dict:
         SystemMessage(content=SYSTEM_PROMPT),
         HumanMessage(content=_build_user_prompt(state)),
     ]
+    
+    writer({"agent": "analyst", "event": "thinking", "msg": "Calling LLM to extract competitors, pain points, and market gaps"})
+
 
     analysis: MarketAnalysis = structured_llm.invoke(messages, config=config)
 
@@ -124,5 +132,11 @@ def analyst_node(state: MarketScoutState, config: RunnableConfig) -> dict:
         len(analysis.pain_points),
         len(analysis.market_gaps),
     )
+    
+    writer({"agent": "analyst", "event": "done", "msg": (
+        f"Identified {len(analysis.competitors)} competitors, "
+        f"{len(analysis.pain_points)} pain points, "
+        f"{len(analysis.market_gaps)} market gaps"
+    )})
 
     return {"analysis": analysis.model_dump()}
