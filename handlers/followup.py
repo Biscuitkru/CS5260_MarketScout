@@ -75,10 +75,10 @@ def handle_followup(question: str, save_fn):
     llm_messages.append(HumanMessage(content=question))
 
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            llm = ChatGoogleGenerativeAI(model=PUBLISHER_MODEL, temperature=0.3)
-            response = str(llm.invoke(llm_messages).content).strip()
-        st.markdown(response)
+        llm = ChatGoogleGenerativeAI(model=PUBLISHER_MODEL, temperature=0.3)
+        response = st.write_stream(
+            chunk.content for chunk in llm.stream(llm_messages)
+        )
         st.session_state.messages.append({"role": "assistant", "content": response})
         save_fn()
         st.rerun()
