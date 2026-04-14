@@ -92,10 +92,13 @@ Report structure:
 ## Conclusion
 
 Table and chart rules:
-- Create tables only when they help summarize concrete data already present in the input.
-- Create charts only when there is trustworthy numeric evidence such as ratings, review counts,
-  competitor counts, percentages, or other explicit statistics.
+- Strongly prefer including a competitor summary table (name, avg_rating, review_count, key strength)
+  whenever multiple competitors are identified — even with partial data.
+- Include a bar chart comparing competitors by avg_rating when ratings are available,
+  including analyst-inferred estimates. Label estimated values clearly in the table.
+- Include a second bar chart for review volumes if counts are available.
 - Prefer simple bar charts for comparisons; use line or area charts only if the data clearly implies them.
+- Skip charts only if there is genuinely no numeric or comparable data to visualise.
 - Keep tables compact and decision-useful.
 - If there is not enough reliable numeric evidence, return no charts.
 - Rows in tables and records in charts must be valid JSON objects.

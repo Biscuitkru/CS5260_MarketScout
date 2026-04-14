@@ -79,7 +79,13 @@ the user's proposed business could address?
 Guidelines:
 - Deduplicate businesses that appear under slight name variations.
 - Be specific: "slow service during weekday lunch rush" is better than "bad service".
-- If data is insufficient for a field, use null or an empty list — never fabricate data.
+- For avg_rating: extract explicit star ratings if present. If a snippet describes sentiment
+  without a number (e.g. "highly rated", "mixed reviews"), make a reasonable estimate
+  (e.g. 4.2, 3.5) and note it is inferred — do not leave it null if sentiment is clear.
+- For review_count: extract explicit numbers if present. If volume is implied
+  (e.g. "popular", "hundreds of reviews"), provide a reasonable estimate.
+- Always populate avg_rating and review_count for named competitors where any
+  sentiment data exists — sparse numeric data is better than null for visualisation.
 """
 
 
