@@ -160,15 +160,14 @@ The Publisher acts as the generator of the final report at the end of the pipeli
 
 The Publisher takes the state from upstream including the business idea, location, search queries, Analyst output, and raw search results, then put them together as the JSON payload for the prompt to be sent to the model. The LLM model is asked to generate the report based on the searched results of the pipeline in the form below:
 
-# Market Research Report
-## Executive Summary
-## Market Overview
-## Key Competitors
-## Customer Pain Points
-## Market Gaps and Opportunities
-## Strategic Recommendations
-## Risks and Unknowns
-## Conclusion
+- Executive Summary
+- Market Overview
+- Key Competitors
+- Customer Pain Points
+- Market Gaps and Opportunities
+- Strategic Recommendations
+- Risks and Unknowns
+- Conclusion
 
 Besides report, the Publisher will generate charts and tables optionally. The generation of charts and tables are not guaranteed because the returned results from upstream might not have enough data. Here are some rules to generate the tables and charts:
 
