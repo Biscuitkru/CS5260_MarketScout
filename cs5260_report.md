@@ -1,12 +1,31 @@
 # MarketScout
 
 ---
+## Introduction
 
-> *[PLACEHOLDER: opening section]*
+Market research before launching a business can be genuinely painful. We all understand that there exists a plethora of information out there through the web tha can come from hundreds or thousands of sources. Things like competitor reviews, customer complaints, pricing signals but the glaring problem here is that this information is scattered across Google Maps, Yelp, Reddit, and review aggregators. Piecing it together manually means opening twenty tabs, reading through hundreds of reviews, and trying to synthesise patterns in your head. Most people would either just give up halfway or spend money hiring someone to do it for them.
+
+MarketScout is an Autonomous Market Research platform with an agent that is designed to tackle this problem by providing high-quality competitive analysis for small business owners and freelancers.
+
+It is able to actively plan its research, navigate the web to gather data, analyze potential competitors and summarise its findings into a professional business report. This helps close the gap between basic search engine results and expensive consultancy reports, MarketScout empowers entrepreneurs to make data-driven decisions regarding business locations, competitor weaknesses, and market gaps.
 
 ---
 
-> *[PLACEHOLDER: system architecture overview]*
+## System Architecture
+
+MarketScout is built on LangGraph, a framework for building stateful agent pipelines as directed graphs. The idea behind choosing LangGraph stems from two main reasons: The research workflow is inherently sequential and LangGraph offers utilisation of checkpoints and streaming.
+
+The graph is split into four main nodes: Planner, Scout, Analyst, and Publisher, connected by a shared MarketScoutState. Each of the node will own a distinct stage of the research process and communicates with each other through a shared MarketScout State whereby one output from one node becomes input for the next.
+
+---
+
+## Planner
+
+The goal of the Planner is to take whatever the user has typed in the prompt and turn it into something the rest of the pipeline can actually work with. An example like "I want to open a bubble tea shop in Singapore" would mean something to a person, but the Scout would need a more concrete search query to run and not as a sentence to interpret.
+
+The planner extracts two main things from the query, the core business idea and the target location. From those, it then generates four to six targeted search queries for the Scout to run. These queries will not just be variations of the same thing but each query will aim to target different angles of the market. One would look for direct competitors, another pulls review heavy sources, another would find customer complaints, and another looks for signals of unmet demand. This is so that when the Scout finishes, the evidence you get from these multiple queries will span multiple perspectives rather than just six versions of the same Google search.
+
+If the original query did not include a business type or a location, the Planner cannot fill those fields. In that case, rather than guessing, the pipeline pauses and asks. A Clarify node generates a targeted question, shows it to the user, and appends the answer back onto the original query before the Planner runs again. This loop repeats until both fields are resolved, capped at three attempts to prevent the pipeline from stalling indefinitely.
 
 ---
 
@@ -95,11 +114,29 @@ We grab the clarifying question from `state.tasks[0].interrupts[0].value`, show 
 
 ---
 
-> *[PLACEHOLDER: multi-turn conversation]*
+## Multi-turn conversation
+
+This whole process is not made to be a one prompt and done kind of situation, after the initial report is given to the user, the user is allowed to ask follow up questions in the same chat interface giving it the same experience as a regular chatbot.
+
+For every follow up question, we will reconstruct the full research context and pass it on as a system prompt. This means the prompt contains the business idea, target location, search queries used, the raw Tavily results with source URLs, the structured analysis from the Analyst, and the final report. The full conversation history is then also appended as a message sequence before the latest question.
+
+The response will be streamed token by token as follow-up answers may take a while to run, and a spinner with no visible output would feel broken from a user experience perspective even when it is working correctly.
+
+The trade off here though is that due to there being full context passing, the token cost grows with every follow up question. For sessions with only a fewhandful of questions, the context is likely to stays well within Gemini's api limits. Further improvements to be made in the future include the implementation of retrieval-augmented generation to pull only relevant chunks per question which would require addinging an embedding model, a vector store, and a retrieval step.
 
 ---
 
-> *[PLACEHOLDER: session persistence]*
+## Session Persistence
+
+A full MarketScout run takes around a minute and would produce a report the user may want to come back to later or share with someone else. Streamlit clears all the session state on every page reload, so without persistence that work is gone the moment the tab closes.
+
+We currently store these sessions in a local SQLite database. Each record holds the session ID, a title derived from the first user message, timestamps, the message history serialised as JSON, the pipeline context, and the final report text. Saving these sessions happens automatically after the pipeline finishes, after each follow-up response, and after a rename.
+
+Loading a session from the sidebar restores everything: the chat history renders, the pipeline context is then restored and available for follow-up questions. From the user's perspective, picking up where they left off works the same whether they closed the tab an hour ago or a week ago.
+
+The sidebar lists sessions ordered by most recently updated, with relative timestamps like "Just now", "3h ago", "Yesterday" and also a small menu per entry for Rename and Delete.
 
 ---
+
+## Conclusion
 
