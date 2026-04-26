@@ -152,7 +152,37 @@ We grab the clarifying question from `state.tasks[0].interrupts[0].value`, show 
 
 ---
 
-> _[PLACEHOLDER: the Publisher]_
+## The Publisher
+
+The Publisher acts as the generator of the final report at the end of the pipeline. It groups together the results returned by the Analyst, and uses the searched content as context of prompt to generate the final report. It will contain charts and tables if there are sufficient numeric data from the searched results to facilitate user visualization. 
+
+### What it does
+
+The Publisher takes the state from upstream including the business idea, location, search queries, Analyst output, and raw search results, then put them together as the JSON payload for the prompt to be sent to the model. The LLM model is asked to generate the report based on the searched results of the pipeline in the form below:
+
+# Market Research Report
+## Executive Summary
+## Market Overview
+## Key Competitors
+## Customer Pain Points
+## Market Gaps and Opportunities
+## Strategic Recommendations
+## Risks and Unknowns
+## Conclusion
+
+Besides report, the Publisher will generate charts and tables optionally. The generation of charts and tables are not guaranteed because the returned results from upstream might not have enough data. Here are some rules to generate the tables and charts:
+
+- Strongly prefer including a competitor summary table (name, avg_rating, review_count, key strength)
+  whenever multiple competitors are identified — even with partial data.
+- Include a bar chart comparing competitors by avg_rating when ratings are available, including analyst-inferred estimates. Label estimated values clearly in the table.
+- Include a second bar chart for review volumes if counts are available.
+- Prefer simple bar charts for comparisons; use line or area charts only if the data clearly implies them.
+- Skip charts only if there is genuinely no numeric or comparable data to visualize.
+- Keep tables compact and decision-useful.
+- If there is not enough reliable numeric evidence, return no charts.
+- Rows in tables and records in charts must be valid JSON objects.
+
+The tables and charts are separated from the structured report so that the report format will be structured.
 
 ---
 
