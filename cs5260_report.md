@@ -135,6 +135,30 @@ We grab the clarifying question from `state.tasks[0].interrupts[0].value`, show 
 
 > _[PLACEHOLDER: slide deck generation]_
 
+## Slide Deck Generation
+
+To bridge the gap between deep-dive research and a final pitch, we implemented a Slide Deck Generator that transforms the Publisher’s markdown reports into a sleek, professional .pptx file.
+
+Rather than a final, rigid product, this module serves as a high-quality starting point. It handles automation of the structural layout and content condensation processes, giving users a solid foundation to customize and refine.
+
+### Intelligent Summarisation
+
+Using a specialized SystemMessage, we task Gemini with distilling the raw research into a strict, four-slide JSON schema. This ensures the output is balanced and digestible:
+
+- Slide 1: Market Overview
+
+- Slide 2: Competitive Landscape
+
+- Slide 3: Customer Insights & Gaps
+
+- Slide 4: Recommendations & Risks
+
+### Markdown-to-PowerPoint Parsing
+
+One of the key technical challenges was ensuring that formatting remains clean once it leaves the LLM environment. We developed a custom parser (`_parse_inline()`) , to strip markdown markers (like **bold**) and translate them into native PowerPoint format. This ensures that when a user opens the file to start their own edits, they are no syntax issues or broken formatting.
+
+The output is a `.pptx` file populated with 3–4 high-impact bullet points per slide. By automating the extraction of key findings into a presentation format, MarketScout eliminates the friction of manual copy-pasting. It provides a polished, data-backed starting point that entrepreneurs can then easily tailor to their specific needs.
+
 ---
 
 > _[PLACEHOLDER: multi-turn conversation]_
