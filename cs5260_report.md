@@ -23,7 +23,11 @@ The graph is split into four main nodes: Planner, Scout, Analyst, and Publisher,
 
 The goal of the Planner is to take whatever the user has typed in the prompt and turn it into something the rest of the pipeline can actually work with. An example like "I want to open a bubble tea shop in Singapore" would mean something to a person, but the Scout would need a more concrete search query to run and not as a sentence to interpret.
 
+### What it does
+
 The planner extracts two main things from the query, the core business idea and the target location. From those, it then generates four to six targeted search queries for the Scout to run. These queries will not just be variations of the same thing but each query will aim to target different angles of the market. One would look for direct competitors, another pulls review heavy sources, another would find customer complaints, and another looks for signals of unmet demand. This is so that when the Scout finishes, the evidence you get from these multiple queries will span multiple perspectives rather than just six versions of the same Google search.
+
+### Handling ambiguity
 
 If the original query did not include a business type or a location, the Planner cannot fill those fields. In that case, rather than guessing, the pipeline pauses and asks. A Clarify node generates a targeted question, shows it to the user, and appends the answer back onto the original query before the Planner runs again. This loop repeats until both fields are resolved, capped at three attempts to prevent the pipeline from stalling indefinitely.
 
