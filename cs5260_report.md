@@ -185,8 +185,6 @@ The tables and charts are separated from the structured report so that the repor
 
 ---
 
-> _[PLACEHOLDER: slide deck generation]_
-
 ## Slide Deck Generation
 
 To bridge the gap between deep-dive research and a final pitch, we implemented a Slide Deck Generator that transforms the Publisher’s markdown reports into a sleek, professional .pptx file.
@@ -236,6 +234,3 @@ Loading a session from the sidebar restores everything: the chat history renders
 The sidebar lists sessions ordered by most recently updated, with relative timestamps like "Just now", "3h ago", "Yesterday" and also a small menu per entry for Rename and Delete.
 
 ---
-
-## Conclusion
-
