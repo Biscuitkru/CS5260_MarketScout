@@ -1,17 +1,39 @@
 # MarketScout
 
+*CS5260 · Group 12*
+
+An autonomous AI agent that does in minutes what takes entrepreneurs hours of manual research and potentially thousands in consultancy fees.
+
 ---
+
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [System Architecture](#system-architecture)
+3. [The Planner](#the-planner)
+4. [The Scout](#the-scout)
+5. [The Analyst](#the-analyst)
+6. [Live Agent Thinking on the Frontend](#live-agent-thinking-on-the-frontend)
+7. [The Publisher](#the-publisher)
+8. [Slide Deck Generation](#slide-deck-generation)
+9. [Multi-turn Conversation](#multi-turn-conversation)
+10. [Session Persistence](#session-persistence)
+
+---
+
 ## Introduction
 
-Market research before launching a business can be genuinely painful. We all understand that there exists a plethora of information out there through the web tha can come from hundreds or thousands of sources. Things like competitor reviews, customer complaints, pricing signals but the glaring problem here is that this information is scattered across Google Maps, Yelp, Reddit, and review aggregators. Piecing it together manually means opening twenty tabs, reading through hundreds of reviews, and trying to synthesise patterns in your head. Most people would either just give up halfway or spend money hiring someone to do it for them.
+> How we built an autonomous agent that turns a single sentence into a competitive market research report.
+
+Market research before launching a business can be genuinely painful. We all understand that there exists a plethora of information out there through the web that can come from hundreds or thousands of sources. Things like competitor reviews, customer complaints, pricing signals but the glaring problem here is that this information is scattered across Google Maps, Yelp, Reddit, and review aggregators. Piecing it together manually means opening twenty tabs, reading through hundreds of reviews, and trying to synthesise patterns in your head. Most people would either just give up halfway or spend money hiring someone to do it for them.
 
 MarketScout is an Autonomous Market Research platform with an agent that is designed to tackle this problem by providing high-quality competitive analysis for small business owners and freelancers.
 
 It is able to actively plan its research, navigate the web to gather data, analyze potential competitors and summarise its findings into a professional business report. This helps close the gap between basic search engine results and expensive consultancy reports, MarketScout empowers entrepreneurs to make data-driven decisions regarding business locations, competitor weaknesses, and market gaps.
 
----
-
 ## System Architecture
+
+> A LangGraph pipeline where each worker owns a distinct stage of the research process.
 
 MarketScout is built on LangGraph, a framework for building stateful agent pipelines as directed graphs. The idea behind choosing LangGraph stems from two main reasons: The research workflow is inherently sequential and LangGraph offers utilisation of checkpoints and streaming.
 
@@ -19,7 +41,9 @@ The graph is split into four main nodes: Planner, Scout, Analyst, and Publisher,
 
 ---
 
-## Planner
+## The Planner
+
+> The entry point — turns a natural language query into a structured research plan.
 
 The goal of the Planner is to take whatever the user has typed in the prompt and turn it into something the rest of the pipeline can actually work with. An example like "I want to open a bubble tea shop in Singapore" would mean something to a person, but the Scout would need a more concrete search query to run and not as a sentence to interpret.
 
@@ -31,9 +55,9 @@ The planner extracts two main things from the query, the core business idea and 
 
 If the original query did not include a business type or a location, the Planner cannot fill those fields. In that case, rather than guessing, the pipeline pauses and asks. A Clarify node generates a targeted question, shows it to the user, and appends the answer back onto the original query before the Planner runs again. This loop repeats until both fields are resolved, capped at three attempts to prevent the pipeline from stalling indefinitely.
 
----
+## The Scout
 
-## Scout Agent
+> Executes targeted web searches and packages the results for the Analyst.
 
 The Scout agent serves as a high-quality data retrieval engine, leveraging the Tavily API to execute targeted web searches and distill raw data into structured JSON for competitor analysis. We bypassed traditional search engines in favor of Tavily because it is engineered for AI agents. It effectively strips away the noise of ads, SEO-bloat, and irrelevant metadata. This ensures that only high-signal, research-oriented content passes along to the Analyst for processing.
 
@@ -77,9 +101,9 @@ The Scout handles data normalization and real-time streaming so the user sees a 
 
 The outcome of a Scout run is organized search results delivered in JSON format. This result contains verified competitor names, direct URLs, and summarized content snippets that are ready for immediate sentiment analysis.
 
----
-
 ## The Analyst
+
+> Extracts competitor profiles, customer pain points, and market gaps from raw search results.
 
 The Analyst reads customer reviews and figures out what people are complaining about. By complain, it does not just look at whether a customer would like a particular product or service, or not, and instead it tries to understand deeper sentiments so that it would be more useful for the business owner. "This place has bad reviews" tells a business owner nothing. But "this place has slow service during lunch and no power outlets for laptops" is something they can actually compete against.
 
@@ -93,9 +117,9 @@ For the output, we also made it structured from the start. We then pass the stru
 
 The Analyst returns competitors, complaints, and market gaps each as their own list with defined fields. This was particularly helpful for downstream, because if it had returned free text instead, then the Publisher, the conversation handler, and the chart builder would all have to parse the free text output.
 
----
+## Live Agent Thinking on the Frontend
 
-## Live agent thinking on the frontend
+> Streaming pipeline progress to the UI so users know what the agents are doing in real time.
 
 We also built the frontend streaming, so users can watch the agents work instead of staring at a blank screen or a loading spinner, without knowing if things are working as intended.
 
@@ -150,9 +174,9 @@ After the stream loop finishes, we check `graph.get_state(config).next` for a pe
 
 We grab the clarifying question from `state.tasks[0].interrupts[0].value`, show it as a chat message, and set `awaiting_clarification` to true. When the user replies, the pipeline resumes from the same config and picks up where it stopped. LangGraph checkpoints the state automatically, so we did not have to build persistence for this ourselves.
 
----
-
 ## The Publisher
+
+> Assembles the final report, charts, and tables from the Analyst's structured output.
 
 The Publisher acts as the generator of the final report at the end of the pipeline. It groups together the results returned by the Analyst, and uses the searched content as context of prompt to generate the final report. It will contain charts and tables if there are sufficient numeric data from the searched results to facilitate user visualization. 
 
@@ -187,6 +211,8 @@ The tables and charts are separated from the structured report so that the repor
 
 ## Slide Deck Generation
 
+> Condenses the full report into a downloadable 4-slide executive summary.
+
 To bridge the gap between deep-dive research and a final pitch, we implemented a Slide Deck Generator that transforms the Publisher’s markdown reports into a sleek, professional .pptx file.
 
 Rather than a final, rigid product, this module serves as a high-quality starting point. It handles automation of the structural layout and content condensation processes, giving users a solid foundation to customize and refine.
@@ -209,9 +235,9 @@ One of the key technical challenges was ensuring that formatting remains clean o
 
 The output is a `.pptx` file populated with 3–4 high-impact bullet points per slide. By automating the extraction of key findings into a presentation format, MarketScout eliminates the friction of manual copy-pasting. It provides a polished, data-backed starting point that entrepreneurs can then easily tailor to their specific needs.
 
----
+## Multi-turn Conversation
 
-## Multi-turn conversation
+> Keeping the full research context alive so users can keep asking questions after the report is delivered.
 
 This whole process is not made to be a one prompt and done kind of situation, after the initial report is given to the user, the user is allowed to ask follow up questions in the same chat interface giving it the same experience as a regular chatbot.
 
@@ -219,11 +245,11 @@ For every follow up question, we will reconstruct the full research context and 
 
 The response will be streamed token by token as follow-up answers may take a while to run, and a spinner with no visible output would feel broken from a user experience perspective even when it is working correctly.
 
-The trade off here though is that due to there being full context passing, the token cost grows with every follow up question. For sessions with only a fewhandful of questions, the context is likely to stays well within Gemini's api limits. Further improvements to be made in the future include the implementation of retrieval-augmented generation to pull only relevant chunks per question which would require addinging an embedding model, a vector store, and a retrieval step.
-
----
+The trade off here though is that due to there being full context passing, the token cost grows with every follow up question. For sessions with only a handful of questions, the context is likely to stay well within Gemini's api limits. Further improvements to be made in the future include the implementation of retrieval-augmented generation to pull only relevant chunks per question which would require adding an embedding model, a vector store, and a retrieval step.
 
 ## Session Persistence
+
+> Persisting research sessions to SQLite so closing the tab doesn't mean losing the work.
 
 A full MarketScout run takes around a minute and would produce a report the user may want to come back to later or share with someone else. Streamlit clears all the session state on every page reload, so without persistence that work is gone the moment the tab closes.
 
@@ -232,5 +258,3 @@ We currently store these sessions in a local SQLite database. Each record holds 
 Loading a session from the sidebar restores everything: the chat history renders, the pipeline context is then restored and available for follow-up questions. From the user's perspective, picking up where they left off works the same whether they closed the tab an hour ago or a week ago.
 
 The sidebar lists sessions ordered by most recently updated, with relative timestamps like "Just now", "3h ago", "Yesterday" and also a small menu per entry for Rename and Delete.
-
----
